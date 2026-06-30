@@ -21,7 +21,7 @@ tilesz = 50
 
 class Player():
 
-    def __init__(self, x, y,speed = 1.75, range = 150, slimespeed = 20):
+    def __init__(self, x, y,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20):
         self.img = pg.image.load('slime.png')
         self.rect = self.img.get_rect()
 
@@ -34,11 +34,14 @@ class Player():
 
         self.shoot_cooldown = 0
         self.slimespeed = slimespeed
+        self.range = range
+        self.shotspeed = shotspeed
+
 
     def shoot(self, dir):
         if self.shoot_cooldown == 0:
             self.shoot_cooldown = self.slimespeed
-            bulletP = Bullet(self.rect.centerx, self.rect.centery, dir)
+            bulletP = Bullet(self.rect.centerx, self.rect.centery, dir, self.shotspeed, self.range)
             bulletP.add(bulletP_group)
 
     def update(self):
