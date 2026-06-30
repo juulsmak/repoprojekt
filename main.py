@@ -1,33 +1,37 @@
 import pygame as pg
+from rooms import Pokoj, pokojdane, screen
 
 #start pygame
 pg.init()
 clock = pg.time.Clock()
 fps = 60
-screen_size_x = 1000
-screen_size_y = 600
-screen = pg.display.set_mode((screen_size_x,screen_size_y))
+
+
 
 #setup okna
 pg.display.set_caption('isaac')
 icon = pg.image.load('hiclipart.com.png')
 pg.display.set_icon(icon)
 
-
+#images
+enemy1_img = pg.image.load('enemy1.png')
 bulletP_img = pg.image.load('bullet.png')
-tilesz = 50
+
+
 
 
 
 class Player():
 
-    def __init__(self, x, y,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20):
+    def __init__(self, x, y,health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
         self.img = pg.image.load('slime.png')
         self.rect = self.img.get_rect()
 
         self.rect.x = x
         self.rect.y = y
         self.speed = speed
+        self.health = health
+        self.max_health = health
 
         self.width = self.img.get_width()
         self.height = self.img.get_height()
@@ -36,6 +40,7 @@ class Player():
         self.slimespeed = slimespeed
         self.range = range
         self.shotspeed = shotspeed
+        self.dmg = dmg
 
 
     def shoot(self, dir):
@@ -43,6 +48,12 @@ class Player():
             self.shoot_cooldown = self.slimespeed
             bulletP = Bullet(self.rect.centerx, self.rect.centery, dir, self.shotspeed, self.range)
             bulletP.add(bulletP_group)
+
+    def alive(self):
+        if self.health > 0:
+            return True
+        else:
+            return False
 
     def update(self):
         dx = 0
@@ -72,6 +83,7 @@ class Player():
 
 
     #collisions
+        #tiles
         for tile in pokoj.tilelist:
             #for y
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
@@ -80,85 +92,148 @@ class Player():
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx= 0
 
+
+
         self.rect.x += dx
         self.rect.y += dy
 
         screen.blit(self.img, self.rect)
-        pg.draw.rect(screen, (0, 0, 0), self.rect, 2)
 
 
+class Enemy(pg.sprite.Sprite):
+    def __init__(self, x, y, speed = 1, dmg= 1, health = 100):
+        pg.sprite.Sprite.__init__(self)
+        self.speed = speed
+        self.image = enemy1_img
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.cooldown = 40
+        self.dmg = dmg
+        self.health = health
 
-class Pokoj():
-    def __init__(self, dane):
-        kamienob = pg.image.load('kamien.png')
-        self.tilelist = []
+    def update(self):
+        dx = 0
+        dy = 0
+        if self.cooldown >0:
+            self.cooldown -=1
+        if self.cooldown == 0:
+            #for x
+            xcheck1 = abs(player.rect.centerx - (self.rect.centerx + self.speed) )
+            xcheck2 = abs(player.rect.centerx - (self.rect.centerx - self.speed) )
+            if self.rect.centerx == player.rect.centerx:
+                dx = 0
+            elif xcheck1 <= xcheck2:
+                dx = self.speed
+            else:
+                dx = -self.speed
 
-        rows = 0
-        for row in dane:
-            cols = 0
-            for tile in row:
-                if tile == 1:
+            #for y
+            ycheck1 = abs(player.rect.centery - (self.rect.centery + self.speed))
+            ycheck2 = abs(player.rect.centery - (self.rect.centery - self.speed) )
+            if self.rect.centery == player.rect.centery:
+                dy = 0
+            elif ycheck1 <= ycheck2:
+                dy = self.speed
+            else:
+                dy = -self.speed
 
-                    kamien_rect = kamienob.get_rect()
-                    kamien_rect.x = cols * tilesz
-                    kamien_rect.y = rows * tilesz
-                    tile = (kamienob,kamien_rect)
-                    self.tilelist.append(tile)
-                cols +=1
-            rows +=1
+    #collisions
+        #tiles
+        for tile in pokoj.tilelist:
+            #for y
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                dy = 0
+            #for x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx= 0
 
-    def draw(self):
-        for tile in self.tilelist:
-            screen.blit(tile[0], tile[1])
-            pg.draw.rect(screen, (0,0,0), tile[1], 2)
+        #player
+        for tile in pokoj.tilelist:
+            #for y
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                dy = 0
+                player.health -= self.dmg
+            #for x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx= 0
+                player.health -= self.dmg
+
+        if self.alive() == False:
+            self.kill()
+
+
+        self.rect.x += dx
+        self.rect.y += dy
+
 
 
 class Bullet(pg.sprite.Sprite):
-    def __init__(self, x, y, dir, speed =3 , range = 150):
+    def __init__(self, x, y, dir, speed =3 , range = 150, dmg = 1):
         pg.sprite.Sprite.__init__(self)
         self.speed = speed
         self.range = range
+        self.dmg = dmg
         self.image = bulletP_img
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
         self.dir = dir
 
     def update(self):
+        dx = 0
+        dy = 0
         if self.range <= 0:
             self.kill()
         else:
             if self.dir == 'up':
-                self.rect.y -= self.speed
+                dy -= self.speed
             if self.dir == 'dwn':
-                self.rect.y += self.speed
+                dy += self.speed
             if self.dir == 'rght':
-                self.rect.x += self.speed
+                dx += self.speed
             if self.dir == 'lft':
-                self.rect.x -= self.speed
+                dx -= self.speed
             self.range -= self.speed
+
+        for tile in pokoj.tilelist:
+            #for y
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                dy = 0
+            #for x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx= 0
+        if self in bulletP_group:
+            for el in enemy_group:
+                if pg.sprite.spritecollide(el, bulletP_group, False):
+                    if el.alive():
+                        el.health -= self.dmg
+                        self.kill()
+        else:
+            if pg.sprite.spritecollide(player, bulletE_group, False):
+                if player.alive():
+                    player.health -= self.dmg
+                    self.kill()
+
+
+        self.rect.x += dx
+        self.rect.y += dy
 
 
 #grupa pocisków
 bulletP_group = pg.sprite.Group()
 bulletE_group = pg.sprite.Group()
 
-pokojdane = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+enemy_group = pg.sprite.Group()
+
 
 pokoj = Pokoj(pokojdane)
 player = Player(300,300)
+etest = Enemy(400, 400, 1, health = 5)
+etest.add(enemy_group)
 
 
 #game loop
@@ -174,6 +249,7 @@ while gamerun == True:
     player.update()
     bulletP_group.update()
     bulletP_group.draw(screen)
-    bulletE_group.update()
-    bulletE_group.draw(screen)
+    enemy_group.update()
+    enemy_group.draw(screen)
+
     pg.display.update()
