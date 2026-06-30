@@ -13,22 +13,39 @@ pg.display.set_caption('isaac')
 icon = pg.image.load('hiclipart.com.png')
 pg.display.set_icon(icon)
 
+
+bulletP_img = pg.image.load('bullet.png')
 tilesz = 50
+
+
 
 class Player():
 
-    def __init__(self, x, y,speed = 1.75):
+    def __init__(self, x, y,speed = 1.75, range = 150, slimespeed = 20):
         self.img = pg.image.load('slime.png')
         self.rect = self.img.get_rect()
+
         self.rect.x = x
         self.rect.y = y
+        self.speed = speed
+
         self.width = self.img.get_width()
         self.height = self.img.get_height()
-        self.speed = speed
+
+        self.shoot_cooldown = 0
+        self.slimespeed = slimespeed
+
+    def shoot(self, dir):
+        if self.shoot_cooldown == 0:
+            self.shoot_cooldown = self.slimespeed
+            bulletP = Bullet(self.rect.centerx, self.rect.centery, dir)
+            bulletP.add(bulletP_group)
 
     def update(self):
         dx = 0
         dy = 0
+
+        #controls
         key = pg.key.get_pressed()
         if key[pg.K_w]:
             dy -= self.speed
@@ -39,8 +56,16 @@ class Player():
         if key[pg.K_a]:
             dx -= self.speed
         if key[pg.K_UP]:
-            bullet = Bullet(self.rect.x, self.rect.y)
-            bullet.shot('up')
+            self.shoot('up')
+        if key[pg.K_DOWN]:
+            self.shoot('dwn')
+        if key[pg.K_RIGHT]:
+            self.shoot('rght')
+        if key[pg.K_LEFT]:
+            self.shoot('lft')
+        #shooting
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -=1
 
 
     #collisions
@@ -84,34 +109,35 @@ class Pokoj():
             screen.blit(tile[0], tile[1])
             pg.draw.rect(screen, (0,0,0), tile[1], 2)
 
-# bullet jako sprote.Sprite i caly czas w gameloop rysowana ta grupa i jak koniec range
-# to zabijam sprite
-class Bullet():
-    def __init__(self, x, y, range = 150, speed = 3):
-        self.img = pg.image.load('bullet.png')
-        self.rect = self.img.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.range = range
+
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, x, y, dir, speed =3 , range = 150):
+        pg.sprite.Sprite.__init__(self)
         self.speed = speed
-        self.shooting = False
+        self.range = range
+        self.image = bulletP_img
+        self.rect = self.image.get_rect()
+        self.rect.center = (x,y)
+        self.dir = dir
 
-    def shot(self, dir: str):
-        self.shooting = True
-        if dir == 'up':
-            self.rect.y -= self.speed
-        if dir == 'dwn':
-            self.rect.y += self.speed
-        if dir == 'rght':
-            self.rect.x += self.speed
-        if dir == 'lft':
-            self.rect.x -= self.speed
+    def update(self):
+        if self.range <= 0:
+            self.kill()
+        else:
+            if self.dir == 'up':
+                self.rect.y -= self.speed
+            if self.dir == 'dwn':
+                self.rect.y += self.speed
+            if self.dir == 'rght':
+                self.rect.x += self.speed
+            if self.dir == 'lft':
+                self.rect.x -= self.speed
+            self.range -= self.speed
 
-        self.range -= self.speed
-        if self.range == 0:
-            self.shooting = False
-        screen.blit(self.img, self.rect)
 
+#grupa pocisków
+bulletP_group = pg.sprite.Group()
+bulletE_group = pg.sprite.Group()
 
 pokojdane = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -130,6 +156,8 @@ pokojdane = [
 
 pokoj = Pokoj(pokojdane)
 player = Player(300,300)
+
+
 #game loop
 gamerun = True
 while gamerun == True:
@@ -137,7 +165,12 @@ while gamerun == True:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             gamerun = False
+
     screen.fill((100,0,100))
     pokoj.draw()
     player.update()
+    bulletP_group.update()
+    bulletP_group.draw(screen)
+    bulletE_group.update()
+    bulletE_group.draw(screen)
     pg.display.update()
