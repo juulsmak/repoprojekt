@@ -1,5 +1,6 @@
 import pygame as pg
 from rooms import Pokoj, pokojdane, screen
+import random
 
 #start pygame
 pg.init()
@@ -21,11 +22,11 @@ bulletP_img = pg.image.load('bullet.png')
 
 
 
-class Player():
-
+class Player(pg.sprite.Sprite):
     def __init__(self, x, y,health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
-        self.img = pg.image.load('slime.png')
-        self.rect = self.img.get_rect()
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.image.load('slime.png')
+        self.rect = self.image.get_rect()
 
         self.rect.x = x
         self.rect.y = y
@@ -33,8 +34,8 @@ class Player():
         self.health = health
         self.max_health = health
 
-        self.width = self.img.get_width()
-        self.height = self.img.get_height()
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
 
         self.shoot_cooldown = 0
         self.slimespeed = slimespeed
@@ -97,7 +98,7 @@ class Player():
         self.rect.x += dx
         self.rect.y += dy
 
-        screen.blit(self.img, self.rect)
+        screen.blit(self.image, self.rect)
 
 
 class Enemy(pg.sprite.Sprite):
@@ -161,7 +162,7 @@ class Enemy(pg.sprite.Sprite):
                 dx= 0
                 player.health -= self.dmg
 
-        if self.alive() == False:
+        if self.health <0:
             self.kill()
 
 
