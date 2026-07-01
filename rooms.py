@@ -12,7 +12,7 @@ screen = pg.display.set_mode((screen_size_x,screen_size_y))
 class Map():
     def __init__(self):
         self.roomlist = random.choice(maplist)
-        self.map = []
+        self.mapvar = []
         self.maptypes = []
         self.maprooms = []
         self.position = 0
@@ -86,5 +86,8 @@ maplist = [map1]
 mapsnormal= []
 mapsstart = []
 mapsboss = []
+
+lista = [[1,1], [0,0]]
+print(lista.index([1,1]))
 
 

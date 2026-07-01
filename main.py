@@ -1,5 +1,5 @@
 import pygame as pg
-from rooms import pokojdane
+from rooms import pokojdane, Map
 import random
 
 #start pygame
@@ -23,6 +23,8 @@ enemy1_img = pg.image.load('enemy1.png')
 bulletP_img = pg.image.load('bullet.png')
 kamienob = pg.image.load('kamien.png')
 tilesz = 50
+fade = pg.Surface((screen_size_x, screen_size_y), pg.SRCALPHA)
+floor = Map()
 
 
 class Pokoj():
@@ -66,8 +68,29 @@ class Pokoj():
             screen.blit(tile[0], tile[1])
 
     def update(self):
-        if enemy_group == False:
+        if not enemy_group:
             self.defeated = True
+
+    def change_room(self, dir):
+        if dir == 5:
+            floor.position[0] -= 1
+            player.rect.x = int((screen_size_x + tilesz)/2)
+            player.rect.y = screen_size_y - 2*tilesz
+        if dir == 6:
+            floor.position[1] += 1
+            player.rect.x = tilesz
+            player.rect.y = int((screen_size_y +tilesz)/2)
+        if dir == 7:
+            floor.position[0] += 1
+            player.rect.x = int((screen_size_x + tilesz)/2)
+            player.rect.y = tilesz
+        if dir == 8:
+            floor.position[1] -=1
+            player.rect.x = screen_size_x - 2*tilesz
+            player.rect.y = int((screen_size_y+tilesz)/2)
+        new_map_index = floor.mapvar.index(floor.position)
+        self.change(floor.maprooms[new_map_index])
+
 
 
 class Player(pg.sprite.Sprite):
@@ -144,8 +167,14 @@ class Player(pg.sprite.Sprite):
         #doors
         for door in pokoj.doors:
             if pokoj.defeated:
-                if
-
+                if pg.Rect.colliderect(self.rect, door[2]):
+                    for i in range(1,25):
+                        fade.fill((0,0,0,4*i))
+                        screen.blit(fade, (0,0))
+                    pokoj.change_room(door[0])
+                    for i in range(1,25):
+                        fade.fill((0,0,0,100 - 4*i))
+                        screen.blit(fade, (0,0))
 
 
         self.rect.x += dx
