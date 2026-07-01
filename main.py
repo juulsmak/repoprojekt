@@ -11,27 +11,57 @@ fps = 60
 
 #setup okna
 pg.display.set_caption('isaac')
-icon = pg.image.load('hiclipart.com.png')
+icon = pg.image.load('img/hiclipart.com.png')
 pg.display.set_icon(icon)
 screen_size_x = 1000
 screen_size_y = 600
 screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 #images
-door_img = pg.image.load('door.png')
-enemy1_img = pg.image.load('enemy1.png')
-bulletP_img = pg.image.load('bullet.png')
-kamienob = pg.image.load('kamien.png')
+door_img = pg.image.load('img/door.png')
+bulletP_img = pg.image.load('img/bullet.png')
+kamienob = pg.image.load('img/kamien.png')
 tilesz = 50
 fade = pg.Surface((screen_size_x, screen_size_y), pg.SRCALPHA)
 fadetime = 20
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, x, y, name,speed = 1, dmg= 1, health = 100):
         pg.sprite.Sprite.__init__(self)
+        self.name = name
+        self.animation_list = []
+        self.index = 0
+        self.update_time = pg.time.get_ticks()
+        self.action = 0
 
+        animations = ['normal']
+
+        for an in animations:
+            temp_list = []
+            for i in range(2):
+                img = pg.image.load(f'img/{self.name}/{an}/{i}.png')
+                temp_list.append(img)
+            self.animation_list.append(temp_list)
+
+
+        self.image = self.animation_list[self.action][self.index]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.speed = speed
+        self.cooldown = 40
+        self.dmg = dmg
+        self.health = health
     def update_animation(self):
-        pass
+        animation_cooldown = 200
+        self.image = self.animation_list[self.action][self.index]
+        if pg.time.get_ticks() - self.update_time > animation_cooldown:
+            self.update_time = pg.time.get_ticks()
+            self.index +=1
+        if self.index >= len(self.animation_list[self.action]):
+            self.index = 0
 
 
 
@@ -105,9 +135,8 @@ class Pokoj():
 
 
 class Player(Entity):
-    def __init__(self, x, y,health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
-        Entity.__init__(self)
-        self.image = pg.image.load('slime.png')
+    def __init__(self, x, y,name, health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
+        Entity.__init__(self, x, y, name, speed, dmg, health)
         self.rect = self.image.get_rect()
 
         self.rect.x = x
@@ -141,6 +170,8 @@ class Player(Entity):
     def update(self):
         dx = 0
         dy = 0
+
+        self.update_animation()
 
         #controls
         key = pg.key.get_pressed()
@@ -192,22 +223,18 @@ class Player(Entity):
 
 
 class Enemy(Entity):
-    def __init__(self, x, y, speed = 1, dmg= 1, health = 100):
-        Entity.__init__(self)
-        self.speed = speed
-        self.image = enemy1_img
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.cooldown = 40
-        self.dmg = dmg
-        self.health = health
+    def __init__(self, x, y, name, speed = 1, dmg= 1, health = 100):
+        Entity.__init__(self, x, y,name, speed , dmg, health)
+
+
+
 
     def update(self):
         dx = 0
         dy = 0
+
+        self.update_animation()
+
         if self.health <0:
             self.kill()
         if self.cooldown >0:
@@ -324,10 +351,10 @@ bulletE_group = pg.sprite.Group()
 player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 
-enemies = [Enemy(0,0,2,2,1)]
+enemies = [Enemy(0,0,'walker',2,2,1)]
 pokoj = Pokoj()
 pokoj.change(floor.startingroom)
-player = Player(500, 300, dmg = 20)
+player = Player(500, 300, 'player')
 player.add(player_group)
 
 
