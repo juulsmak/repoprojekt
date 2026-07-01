@@ -1,5 +1,5 @@
 import pygame as pg
-from rooms import Pokoj, pokojdane, screen
+from rooms import pokojdane
 import random
 
 #start pygame
@@ -17,9 +17,38 @@ pg.display.set_icon(icon)
 #images
 enemy1_img = pg.image.load('enemy1.png')
 bulletP_img = pg.image.load('bullet.png')
+kamienob = pg.image.load('kamien.png')
+tilesz = 50
 
 
+class Pokoj():
+    def __init__(self):
+        self.tilelist = []
 
+    def change(self,dane):
+        rows = 0
+        for row in dane:
+            cols = 0
+            for tile in row:
+                if tile == 1:
+
+                    kamien_rect = kamienob.get_rect()
+                    kamien_rect.x = cols * tilesz
+                    kamien_rect.y = rows * tilesz
+                    tile = (kamienob,kamien_rect)
+                    self.tilelist.append(tile)
+
+                if tile == 2:
+                    en = random.choice(enemies)
+                    en.x = cols * tilesz
+                    en.y = rows * tilesz
+                    en.add(enemy_group)
+                cols +=1
+            rows +=1
+
+    def draw(self):
+        for tile in self.tilelist:
+            screen.blit(tile[0], tile[1])
 
 
 class Player(pg.sprite.Sprite):
@@ -230,11 +259,11 @@ bulletE_group = pg.sprite.Group()
 
 enemy_group = pg.sprite.Group()
 
-
-pokoj = Pokoj(pokojdane)
+enemies = [Enemy(0,0,2,2,50)]
+pokoj = Pokoj()
+pokoj.change(pokojdane)
 player = Player(300,300)
-etest = Enemy(400, 400, 1, health = 5)
-etest.add(enemy_group)
+
 
 
 #game loop

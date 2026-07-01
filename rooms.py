@@ -1,13 +1,13 @@
 import pygame as pg
 import random
 import numpy as np
+from main import Enemy, enemy_group
+from copy import deepcopy
 
 
 screen_size_x = 1000
 screen_size_y = 600
 screen = pg.display.set_mode((screen_size_x,screen_size_y))
-
-tilesz = 50
 
 
 class Map():
@@ -15,6 +15,7 @@ class Map():
         self.roomlist = random.choice(maplist)
         self.map = []
         self.maptypes = []
+        self.maprooms = []
         self.position = 0
         for i in range(0, 4):
             for j in range(0, 4):
@@ -29,32 +30,37 @@ class Map():
                     self.map.append([i, j])
                     self.maptypes.append('boss')
 
+        for el in self.maptypes:
+            if el == 'normal':
+                self.maprooms.append(random.choice(mapsnormal))
+            elif el == 'boss':
+                self.maprooms.append(random.choice(mapsboss))
+            elif el == 'start':
+                self.maprooms.append(random.choice(mapsstart))
 
 
 
+class Door():
+    def __init__(self, pokojdane):
+        self.room = deepcopy(pokojdane)
 
-class Pokoj():
-    def __init__(self, dane):
-        kamienob = pg.image.load('kamien.png')
-        self.tilelist = []
+    def right(self):
+        self.room[5][19] = 6
+        self.room[6][19] = 6
+        return self.room
 
-        rows = 0
-        for row in dane:
-            cols = 0
-            for tile in row:
-                if tile == 1:
-
-                    kamien_rect = kamienob.get_rect()
-                    kamien_rect.x = cols * tilesz
-                    kamien_rect.y = rows * tilesz
-                    tile = (kamienob,kamien_rect)
-                    self.tilelist.append(tile)
-                cols +=1
-            rows +=1
-
-    def draw(self):
-        for tile in self.tilelist:
-            screen.blit(tile[0], tile[1])
+    def left(self):
+        self.room[5][0] = 8
+        self.room[6][0] = 8
+        return self.room
+    def up(self):
+        self.room[0][9] = 5
+        self.room[0][10] = 5
+        return self.room
+    def down(self):
+        self.room[11][9] = 7
+        self.room[11][10] = 7
+        return self.room
 
 pokojdane = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -62,7 +68,7 @@ pokojdane = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -78,3 +84,8 @@ map1 =np.array( [
     [1, 1, 0]
 ])
 maplist = [map1]
+mapsnormal= []
+mapsstart = []
+mapsboss = []
+enemies = [Enemy(0,0,2,2,50)]
+
