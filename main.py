@@ -17,7 +17,12 @@ screen_size_x = 1000
 screen_size_y = 600
 screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
+
 #images
+health_img = pg.image.load('img/bullet.png')
+items_img = {
+    'health': health_img
+}
 door_img = pg.image.load('img/door.png')
 bulletP_img = pg.image.load('img/bullet.png')
 kamienob = pg.image.load('img/kamien.png')
@@ -93,6 +98,11 @@ class Pokoj():
                     en.rect.y = rows * tilesz
                     en.add(enemy_group)
 
+                if tile == 4:
+                    item = random.choice(list(items.keys()))
+                    item.rect.x = cols * tilesz
+                    item.rect.y = rows * tilesz
+                    item.add(item_group)
 
                 if tile == 5 or tile == 6 or tile == 7 or tile ==8:
                     door_rect = door_img.get_rect()
@@ -170,55 +180,60 @@ class Player(Entity):
     def update(self):
         dx = 0
         dy = 0
+        if self.alive():
+
+            self.update_animation()
+
+            if self.health > self.max_health:
+                self.health = self.max_health
+
+            #controls
+            key = pg.key.get_pressed()
+            if key[pg.K_w]:
+                dy -= self.speed
+            if key[pg.K_s]:
+                dy += self.speed
+            if key[pg.K_d]:
+                dx += self.speed
+            if key[pg.K_a]:
+                dx -= self.speed
+            if key[pg.K_UP]:
+                self.shoot('up')
+            if key[pg.K_DOWN]:
+                self.shoot('dwn')
+            if key[pg.K_RIGHT]:
+                self.shoot('rght')
+            if key[pg.K_LEFT]:
+                self.shoot('lft')
+            #shooting
+            if self.shoot_cooldown > 0:
+                self.shoot_cooldown -=1
+
+
+        #collisions
+            #tiles
+            for tile in pokoj.tilelist:
+                #for y
+                if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                    dy = 0
+                #for x
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                    dx= 0
+            #doors
+            for door in pokoj.doors:
+                if pokoj.defeated:
+                    if pg.Rect.colliderect(self.rect, door[2]):
+                        fade.fill((0,0,0))
+                        pokoj.change_room(door[0])
+                        new_map_index = floor.mapvar.index(floor.position)
+                        pokoj.defeated = False
+                        pokoj.change(floor.maprooms[new_map_index])
+            self.rect.x += dx
+            self.rect.y += dy
+        else:
+            self.action = 1
 
         self.update_animation()
-
-        #controls
-        key = pg.key.get_pressed()
-        if key[pg.K_w]:
-            dy -= self.speed
-        if key[pg.K_s]:
-            dy += self.speed
-        if key[pg.K_d]:
-            dx += self.speed
-        if key[pg.K_a]:
-            dx -= self.speed
-        if key[pg.K_UP]:
-            self.shoot('up')
-        if key[pg.K_DOWN]:
-            self.shoot('dwn')
-        if key[pg.K_RIGHT]:
-            self.shoot('rght')
-        if key[pg.K_LEFT]:
-            self.shoot('lft')
-        #shooting
-        if self.shoot_cooldown > 0:
-            self.shoot_cooldown -=1
-
-
-    #collisions
-        #tiles
-        for tile in pokoj.tilelist:
-            #for y
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-                dy = 0
-            #for x
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-                dx= 0
-        #doors
-        for door in pokoj.doors:
-            if pokoj.defeated:
-                if pg.Rect.colliderect(self.rect, door[2]):
-                    fade.fill((0,0,0))
-                    pokoj.change_room(door[0])
-                    new_map_index = floor.mapvar.index(floor.position)
-                    pokoj.defeated = False
-                    pokoj.change(floor.maprooms[new_map_index])
-
-
-        self.rect.x += dx
-        self.rect.y += dy
-
         screen.blit(self.image, self.rect)
 
 
@@ -341,8 +356,23 @@ class Bullet(pg.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
+class Item(pg.sprite.Sprite):
+    def __init__(self, x, y, name):
+        pg.sprite.Sprite.__init__(self)
+        self.name = name
+        self.image = items_img[self.name]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        if pg.sprite.collide_rect(self,player):
+            items[self.name][0] = items[self.name][1]
+
+
 
 floor = Map()
+
 
 
 #grupa pocisków
@@ -350,6 +380,7 @@ bulletP_group = pg.sprite.Group()
 bulletE_group = pg.sprite.Group()
 player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
+items_group = pg.sprite.Group()
 
 enemies = [Enemy(0,0,'walker',2,2,1)]
 pokoj = Pokoj()
@@ -357,6 +388,9 @@ pokoj.change(floor.startingroom)
 player = Player(500, 300, 'player')
 player.add(player_group)
 
+items = {
+    'health': (player.health, 50)
+}
 
 
 #game loop
@@ -375,5 +409,7 @@ while gamerun == True:
     bulletP_group.draw(screen)
     enemy_group.update()
     enemy_group.draw(screen)
+    items_group.update()
+    items_group.draw(screen)
 
     pg.display.update()
