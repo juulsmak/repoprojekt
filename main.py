@@ -13,6 +13,9 @@ fps = 60
 pg.display.set_caption('isaac')
 icon = pg.image.load('hiclipart.com.png')
 pg.display.set_icon(icon)
+screen_size_x = 1000
+screen_size_y = 600
+screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 #images
 enemy1_img = pg.image.load('enemy1.png')
@@ -24,6 +27,7 @@ tilesz = 50
 class Pokoj():
     def __init__(self):
         self.tilelist = []
+        self.defeated = False
 
     def change(self,dane):
         rows = 0
@@ -40,8 +44,8 @@ class Pokoj():
 
                 if tile == 2:
                     en = random.choice(enemies)
-                    en.x = cols * tilesz
-                    en.y = rows * tilesz
+                    en.rect.x = cols * tilesz
+                    en.rect.y = rows * tilesz
                     en.add(enemy_group)
                 cols +=1
             rows +=1
@@ -49,6 +53,10 @@ class Pokoj():
     def draw(self):
         for tile in self.tilelist:
             screen.blit(tile[0], tile[1])
+
+    def update(self):
+        if enemy_group == False:
+            self.defeated = True
 
 
 class Player(pg.sprite.Sprite):
@@ -181,15 +189,15 @@ class Enemy(pg.sprite.Sprite):
                 dx= 0
 
         #player
-        for tile in pokoj.tilelist:
-            #for y
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-                dy = 0
-                player.health -= self.dmg
-            #for x
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-                dx= 0
-                player.health -= self.dmg
+        if player.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+            self.cooldown = 10
+            dy = -75*(1/dy)
+            player.health -= self.dmg
+        if player.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            self.cooldown = 10
+            dx = -75*(1/dx)
+            player.health -= self.dmg
+
 
         if self.health <0:
             self.kill()
@@ -197,6 +205,7 @@ class Enemy(pg.sprite.Sprite):
 
         self.rect.x += dx
         self.rect.y += dy
+
 
 
 
@@ -256,13 +265,14 @@ class Bullet(pg.sprite.Sprite):
 #grupa pocisków
 bulletP_group = pg.sprite.Group()
 bulletE_group = pg.sprite.Group()
-
+player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 
 enemies = [Enemy(0,0,2,2,50)]
 pokoj = Pokoj()
 pokoj.change(pokojdane)
 player = Player(300,300)
+player.add(player_group)
 
 
 
