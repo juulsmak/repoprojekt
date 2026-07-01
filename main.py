@@ -18,6 +18,7 @@ screen_size_y = 600
 screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 #images
+door_img = pg.image.load('door.png')
 enemy1_img = pg.image.load('enemy1.png')
 bulletP_img = pg.image.load('bullet.png')
 kamienob = pg.image.load('kamien.png')
@@ -28,6 +29,7 @@ class Pokoj():
     def __init__(self):
         self.tilelist = []
         self.defeated = False
+        self.doors = []
 
     def change(self,dane):
         rows = 0
@@ -47,6 +49,15 @@ class Pokoj():
                     en.rect.x = cols * tilesz
                     en.rect.y = rows * tilesz
                     en.add(enemy_group)
+
+
+                if tile == 5 or 6 or 7 or 8:
+                    door_rect = door_img.get_rect()
+                    door_rect.x = cols * tilesz
+                    door_rect.y = rows * tilesz
+                    door = (tile, door_img,door_rect)
+                    self.doors.append(door)
+
                 cols +=1
             rows +=1
 
@@ -130,6 +141,11 @@ class Player(pg.sprite.Sprite):
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx= 0
 
+        #doors
+        for door in pokoj.doors:
+            if pokoj.defeated:
+                if
+
 
 
         self.rect.x += dx
@@ -191,11 +207,11 @@ class Enemy(pg.sprite.Sprite):
         #player
         if player.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
             self.cooldown = 10
-            dy = -75*(1/dy)
+            dy = -75*(1/dy+1)
             player.health -= self.dmg
         if player.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
             self.cooldown = 10
-            dx = -75*(1/dx)
+            dx = -75*(1/dx+1)
             player.health -= self.dmg
 
 
