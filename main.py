@@ -24,7 +24,16 @@ bulletP_img = pg.image.load('bullet.png')
 kamienob = pg.image.load('kamien.png')
 tilesz = 50
 fade = pg.Surface((screen_size_x, screen_size_y), pg.SRCALPHA)
-floor = Map()
+fadetime = 20
+
+class Entity(pg.sprite.Sprite):
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)
+
+    def update_animation(self):
+        pass
+
+
 
 
 class Pokoj():
@@ -34,6 +43,8 @@ class Pokoj():
         self.doors = []
 
     def change(self,dane):
+        self.doors = []
+        self.tilelist = []
         rows = 0
         for row in dane:
             cols = 0
@@ -53,7 +64,7 @@ class Pokoj():
                     en.add(enemy_group)
 
 
-                if tile == 5 or 6 or 7 or 8:
+                if tile == 5 or tile == 6 or tile == 7 or tile ==8:
                     door_rect = door_img.get_rect()
                     door_rect.x = cols * tilesz
                     door_rect.y = rows * tilesz
@@ -66,6 +77,8 @@ class Pokoj():
     def draw(self):
         for tile in self.tilelist:
             screen.blit(tile[0], tile[1])
+        for door in self.doors:
+            screen.blit(door[1], door[2])
 
     def update(self):
         if not enemy_group:
@@ -88,14 +101,12 @@ class Pokoj():
             floor.position[1] -=1
             player.rect.x = screen_size_x - 2*tilesz
             player.rect.y = int((screen_size_y+tilesz)/2)
-        new_map_index = floor.mapvar.index(floor.position)
-        self.change(floor.maprooms[new_map_index])
 
 
 
-class Player(pg.sprite.Sprite):
+class Player(Entity):
     def __init__(self, x, y,health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
-        pg.sprite.Sprite.__init__(self)
+        Entity.__init__(self)
         self.image = pg.image.load('slime.png')
         self.rect = self.image.get_rect()
 
@@ -163,18 +174,15 @@ class Player(pg.sprite.Sprite):
             #for x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx= 0
-
         #doors
         for door in pokoj.doors:
             if pokoj.defeated:
                 if pg.Rect.colliderect(self.rect, door[2]):
-                    for i in range(1,25):
-                        fade.fill((0,0,0,4*i))
-                        screen.blit(fade, (0,0))
+                    fade.fill((0,0,0))
                     pokoj.change_room(door[0])
-                    for i in range(1,25):
-                        fade.fill((0,0,0,100 - 4*i))
-                        screen.blit(fade, (0,0))
+                    new_map_index = floor.mapvar.index(floor.position)
+                    pokoj.defeated = False
+                    pokoj.change(floor.maprooms[new_map_index])
 
 
         self.rect.x += dx
@@ -183,9 +191,9 @@ class Player(pg.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 
-class Enemy(pg.sprite.Sprite):
+class Enemy(Entity):
     def __init__(self, x, y, speed = 1, dmg= 1, health = 100):
-        pg.sprite.Sprite.__init__(self)
+        Entity.__init__(self)
         self.speed = speed
         self.image = enemy1_img
         self.rect = self.image.get_rect()
@@ -200,6 +208,8 @@ class Enemy(pg.sprite.Sprite):
     def update(self):
         dx = 0
         dy = 0
+        if self.health <0:
+            self.kill()
         if self.cooldown >0:
             self.cooldown -=1
         if self.cooldown == 0:
@@ -236,16 +246,14 @@ class Enemy(pg.sprite.Sprite):
         #player
         if player.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
             self.cooldown = 10
-            dy = -75*(1/dy+1)
+            dy = -dy
             player.health -= self.dmg
         if player.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
             self.cooldown = 10
-            dx = -75*(1/dx+1)
+            dx = -dx
             player.health -= self.dmg
 
 
-        if self.health <0:
-            self.kill()
 
 
         self.rect.x += dx
@@ -307,16 +315,19 @@ class Bullet(pg.sprite.Sprite):
         self.rect.y += dy
 
 
+floor = Map()
+
+
 #grupa pocisków
 bulletP_group = pg.sprite.Group()
 bulletE_group = pg.sprite.Group()
 player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 
-enemies = [Enemy(0,0,2,2,50)]
+enemies = [Enemy(0,0,2,2,1)]
 pokoj = Pokoj()
-pokoj.change(pokojdane)
-player = Player(300,300)
+pokoj.change(floor.startingroom)
+player = Player(500, 300, dmg = 20)
 player.add(player_group)
 
 
@@ -330,6 +341,7 @@ while gamerun == True:
             gamerun = False
 
     screen.fill((100,0,100))
+    pokoj.update()
     pokoj.draw()
     player.update()
     bulletP_group.update()
