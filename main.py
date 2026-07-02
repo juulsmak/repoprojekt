@@ -16,7 +16,7 @@ boss_apeared = False
 
 #setup okna
 pg.display.set_caption('isaac')
-icon = pg.image.load('img/hiclipart.com.png')
+icon = pg.image.load('img/bullet.png')
 pg.display.set_icon(icon)
 screen_size_x = 1000
 screen_size_y = 600
@@ -28,13 +28,29 @@ heart1_img = pg.image.load('img/fullheart.png')
 heart2_img = pg.image.load('img/emptyheart.png')
 health_img = pg.image.load('img/heart.png')
 range_img = pg.image.load('img/range.png')
-
+dmg_img = pg.image.load('img/dmgup.png')
+maxhealth_img = pg.image.load('img/maxhealth.png')
+shotspeed_img = pg.image.load('img/shotspeed.png')
+speed_img = pg.image.load('img/speed.png')
+tears_img = pg.image.load('img/tears.png')
 items_img = {
-    'health': health_img
+    'health': health_img,
+    'range': range_img,
+    'dmg': dmg_img,
+    'maxhealth': maxhealth_img,
+    'shotspeed': shotspeed_img,
+    'speed': speed_img,
+    'tears': tears_img
 }
 door_img = pg.image.load('img/door.png')
 bulletP_img = pg.image.load('img/bullet.png')
-kamienob = pg.image.load('img/kamien.png')
+kamienob = pg.image.load('img/rock.png')
+menu_screen = pg.image.load('img/startscreen.png')
+game_over_screen = pg.image.load('img/gameover.png')
+you_won_screen = pg.image.load('img/youwin.png')
+startbutton_img = pg.image.load('img/startbutton.png')
+exitbutton_img = pg.image.load('img/exitbutton.png')
+bg = pg.image.load('img/bg.png')
 
 
 
@@ -276,7 +292,6 @@ class Player(Entity):
             self.rect.x += dx
             self.rect.y += dy
         else:
-            self.action = 1
             game_over = True
 
         if boss_apeared == True and boss_group == False:
@@ -300,7 +315,6 @@ class Enemy(Entity):
         self.update_animation()
 
         if self.health <0:
-            self.action = 1
             self.update_animation()
             self.kill()
         if self.cooldown >0:
@@ -427,7 +441,9 @@ class Item(pg.sprite.Sprite):
 
 floor = Map()
 
-
+#buttons
+start_button = Button(300, 400, startbutton_img)
+exit_button = Button(300, 600, exitbutton_img)
 
 #grupa pocisków
 bulletP_group = pg.sprite.Group()
@@ -448,7 +464,13 @@ player.add(player_group)
 healthbar = Healthbar()
 
 items = {
-    'health': [player.health, 50]
+    'health': [player.health, 1],
+    'range': [player.range, 50],
+    'dmg': [player.dmg, 1],
+    'maxhealth': [player.max_health, 1],
+    'shotspeed': [player.shotspeed, 1],
+    'speed': [player.speed, 1],
+    'tears': [player.slimespeed, 2]
 }
 
 
@@ -460,14 +482,14 @@ while gamerun == True:
         if event.type == pg.QUIT:
             gamerun = False
 
-    if start_game == False:
-        pass
+    if start_game == False and end_game == False and game_over == False:
+        screen.blit(menu_screen, menu_screen.get_rect())
+        if start_button.draw(screen):
+            start_game =True
+        if exit_button.draw(screen):
+            gamerun = False
     else:
-        if  game_over == True:
-            pass
-        if end_game == True:
-            pass
-        screen.fill((100,0,100))
+        screen.blit(bg, bg.get_rect())
         pokoj.update()
         pokoj.draw()
         player.update()
@@ -478,6 +500,17 @@ while gamerun == True:
         items_group.update()
         items_group.draw(screen)
         healthbar.draw()
+
+    if  game_over == True and start_game == True:
+        start_game = False
+        screen.fill(game_over_screen)
+        if exit_button.draw(screen):
+            gamerun = False
+    if end_game == True and start_game == True:
+        start_game = False
+        screen.fill(you_won_screen)
+        if exit_button.draw(screen):
+            gamerun = False
 
 
 
