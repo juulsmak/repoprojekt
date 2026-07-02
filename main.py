@@ -123,11 +123,6 @@ class Pokoj():
                     tile = (kamienob,kamien_rect)
                     self.tilelist.append(tile)
 
-                if tile == 2:
-                    en = random.choice(enemies)
-                    en.rect.x = cols * tilesz
-                    en.rect.y = rows * tilesz
-                    enemy_group.add(en)
 
                 if tile == 4:
                     item = random.choice(list(items.keys()))
@@ -135,13 +130,18 @@ class Pokoj():
                     itemy = rows * tilesz
                     itemm = Item (itemx, itemy, item)
                     items_group.add(itemm)
-
                 if tile == 3:
                     b = random.choice(bosses)
                     b.rect.x = cols * tilesz
                     b.rect.y = rows * tilesz
                     boss_group.add(b)
                     boss_apeared = True
+
+                if tile == 2:
+                    en = random.choice(enemies)
+                    en.rect.x = cols * tilesz
+                    en.rect.y = rows * tilesz
+                    enemy_group.add(en)
 
                 if tile == 5 or tile == 6 or tile == 7 or tile ==8:
                     door_rect = door_img.get_rect()
@@ -167,6 +167,7 @@ class Pokoj():
         if not enemy_group:
             self.defeated = True
             enemy_group.empty()
+            floor.mapdefeat[floor.current_ind] = True
 
     def change_room(self, dir):
         if dir == 5:
@@ -454,10 +455,13 @@ class Item(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.ind = floor.current_ind
 
     def update(self):
         if pg.sprite.collide_rect(self,player):
             items[self.name][0] += items[self.name][1]
+            self.kill()
+        if self.ind != floor.current_ind:
             self.kill()
 
 
@@ -492,7 +496,7 @@ bosses = [
     Enemy(0,0,'boss',2,2,150),
     Enemy(0, 0, 'boss', 3, 2, 125, flying = True)
 ]
-player = Player(500, 300, 'player', health = 10, dmg = 20)
+player = Player(500, 300, 'player', health = 10, dmg = 20, speed = 5)
 player.add(player_group)
 healthbar = Healthbar()
 
@@ -534,9 +538,10 @@ while gamerun == True:
                     gamerun = False
             else:
                 screen.blit(bg, bg.get_rect())
-                pokoj.update()
                 pokoj.draw()
                 player.update()
+                enemy_group.update()
+                pokoj.update()
                 bulletP_group.update()
                 bulletP_group.draw(screen)
                 enemy_group.update()

@@ -33,6 +33,7 @@ class Map():
                     self.mapvar.append([i, j])
                     self.maprooms.append(random.choice(mapsboss))
                     self.maptypes.append('boss')
+                self.mapdefeat.append(0)
 
 
         for el in self.mapvar:
@@ -48,8 +49,9 @@ class Map():
                 room = Door(room).up()
             self.maprooms[ind] = room
 
-        self.startingroom = self.maprooms[self.mapvar.index(self.position)]
         self.current_ind = self.mapvar.index(self.position)
+        self.startingroom = self.maprooms[self.current_ind]
+
 
 
 class Door():
