@@ -106,6 +106,7 @@ class Pokoj():
         self.defeated = False
         self.doors = []
         self.changing = False
+        self.boss_apeared = False
 
     def change(self,dane):
         self.defeated = False
@@ -135,7 +136,7 @@ class Pokoj():
                     b.rect.x = cols * tilesz
                     b.rect.y = rows * tilesz
                     boss_group.add(b)
-                    boss_apeared = True
+                    self.boss_apeared = True
 
                 if tile == 2:
                     en = random.choice(enemies)
@@ -232,6 +233,7 @@ class Player(Entity):
         self.range = range
         self.shotspeed = shotspeed
         self.dmg = dmg
+        self.win = False
 
 
     def shoot(self, dir):
@@ -290,18 +292,17 @@ class Player(Entity):
                 if pokoj.defeated:
                     if pg.Rect.colliderect(self.rect, door[2]):
                         fade.fill((0,0,0))
-                        pokoj.changing = True
+                        items_group.empty()
                         pokoj.change_room(door[0])
                         new_map_index = floor.mapvar.index(floor.position)
                         pokoj.defeated = False
                         pokoj.change(floor.maprooms[new_map_index])
             self.rect.x += dx
             self.rect.y += dy
-        else:
-            game_over = True
 
-        if boss_apeared == True and boss_group == False:
-            end_game = True
+
+        if pokoj.boss_apeared == True and boss_group == False:
+            self.win = True
 
 
 
@@ -455,14 +456,14 @@ class Item(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.ind = floor.current_ind
+
 
     def update(self):
-        if pg.sprite.collide_rect(self,player):
+        if pg.sprite.spritecollide(self, player_group, False):
             items[self.name][0] += items[self.name][1]
+            print(player.health)
             self.kill()
-        if self.ind != floor.current_ind:
-            self.kill()
+
 
 
 
@@ -532,7 +533,7 @@ while gamerun == True:
             if exit_button.draw(screen):
                 gamerun = False
         else:
-            if end_game == True:
+            if player.win == True:
                 screen.blit(you_won_screen, you_won_screen.get_rect())
                 if exit_button.draw(screen):
                     gamerun = False
