@@ -1,11 +1,15 @@
 import pygame as pg
 from rooms import pokojdane, Map
 import random
+from button import Button
 
 #start pygame
 pg.init()
 clock = pg.time.Clock()
 fps = 60
+
+start_game = False
+end_game = False
 
 
 
@@ -19,6 +23,8 @@ screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 
 #images
+heart1_img = pg.image.load('img/bullet.png')
+heart2_img = pg.image.load('img/bullet.png')
 health_img = pg.image.load('img/bullet.png')
 items_img = {
     'health': health_img
@@ -26,6 +32,9 @@ items_img = {
 door_img = pg.image.load('img/door.png')
 bulletP_img = pg.image.load('img/bullet.png')
 kamienob = pg.image.load('img/kamien.png')
+
+
+
 tilesz = 50
 fade = pg.Surface((screen_size_x, screen_size_y), pg.SRCALPHA)
 fadetime = 20
@@ -39,11 +48,11 @@ class Entity(pg.sprite.Sprite):
         self.update_time = pg.time.get_ticks()
         self.action = 0
 
-        animations = ['normal']
+        animations = ['normal', 'dead']
 
         for an in animations:
             temp_list = []
-            for i in range(2):
+            for i in range(3):
                 img = pg.image.load(f'img/{self.name}/{an}/{i}.png')
                 temp_list.append(img)
             self.animation_list.append(temp_list)
@@ -116,7 +125,7 @@ class Pokoj():
 
     def draw(self):
         for tile in self.tilelist:
-            screen.blit(tile[0], tile[1])
+            screen.blit(kamienob, tile[1])
         for door in self.doors:
             screen.blit(door[1], door[2])
 
@@ -142,6 +151,35 @@ class Pokoj():
             player.rect.x = screen_size_x - 2*tilesz
             player.rect.y = int((screen_size_y+tilesz)/2)
 
+class Healthbar():
+    def __init__(self):
+        self.image1 = heart1_img
+        self.image2 = heart2_img
+        self.width = self.image1.get_width()
+        self.rect1 = self.image1.get_rect()
+        self.rect2 = self.image2.get_rect()
+        self.full = []
+        self.empty = []
+
+        for i in range(player.max_health):
+            emp =  self.image2.get_rect()
+            emp.x = 10 + self.width*i
+            emp.y = 10
+            self.empty.append(emp)
+
+        for i in range(player.health):
+            fll =  self.image1.get_rect()
+            fll.x = 10 + self.width*i
+            fll.y = 10
+            self.full.append(fll)
+
+
+    def draw(self):
+        for el in self.empty:
+            screen.blit(self.image2, el)
+
+        for i in range(player.health):
+            screen.blit(self.image2, self.full[i])
 
 
 class Player(Entity):
@@ -183,9 +221,6 @@ class Player(Entity):
         if self.alive():
 
             self.update_animation()
-
-            if self.health > self.max_health:
-                self.health = self.max_health
 
             #controls
             key = pg.key.get_pressed()
@@ -233,6 +268,7 @@ class Player(Entity):
         else:
             self.action = 1
 
+
         self.update_animation()
         screen.blit(self.image, self.rect)
 
@@ -242,8 +278,6 @@ class Enemy(Entity):
         Entity.__init__(self, x, y,name, speed , dmg, health)
 
 
-
-
     def update(self):
         dx = 0
         dy = 0
@@ -251,6 +285,8 @@ class Enemy(Entity):
         self.update_animation()
 
         if self.health <0:
+            self.action = 1
+            self.update_animation()
             self.kill()
         if self.cooldown >0:
             self.cooldown -=1
@@ -367,7 +403,12 @@ class Item(pg.sprite.Sprite):
 
     def update(self):
         if pg.sprite.collide_rect(self,player):
-            items[self.name][0] = items[self.name][1]
+            if player.health < player.max_health:
+                items[self.name][0] += items[self.name][1]
+                self.kill()
+            else:
+                player.health = player.max_health
+
 
 
 
@@ -382,14 +423,18 @@ player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 items_group = pg.sprite.Group()
 
-enemies = [Enemy(0,0,'walker',2,2,1)]
+
+itemtest = Item(150, 150, 'health')
+itemtest.add(items_group)
+enemies = [Enemy(0,0,'walker',2,1,1)]
 pokoj = Pokoj()
 pokoj.change(floor.startingroom)
-player = Player(500, 300, 'player')
+player = Player(500, 300, 'player', health = 5)
 player.add(player_group)
+healthbar = Healthbar()
 
 items = {
-    'health': (player.health, 50)
+    'health': [player.health, 50]
 }
 
 
@@ -401,15 +446,21 @@ while gamerun == True:
         if event.type == pg.QUIT:
             gamerun = False
 
-    screen.fill((100,0,100))
-    pokoj.update()
-    pokoj.draw()
-    player.update()
-    bulletP_group.update()
-    bulletP_group.draw(screen)
-    enemy_group.update()
-    enemy_group.draw(screen)
-    items_group.update()
-    items_group.draw(screen)
+    if start_game == False:
+        pass
+    elif end_game == False:
+        screen.fill((100,0,100))
+        pokoj.update()
+        pokoj.draw()
+        player.update()
+        bulletP_group.update()
+        bulletP_group.draw(screen)
+        enemy_group.update()
+        enemy_group.draw(screen)
+        items_group.update()
+        items_group.draw(screen)
+        healthbar.draw()
+    else:
+
 
     pg.display.update()
