@@ -430,6 +430,12 @@ class Bullet(pg.sprite.Sprite):
                     if el.alive():
                         el.health -= self.dmg
                         self.kill()
+            for el in boss_group:
+                if pg.sprite.spritecollide(el, bulletP_group, False):
+                    if el.alive():
+                        el.health -= self.dmg
+                        self.kill()
+
         else:
             if pg.sprite.spritecollide(player, bulletE_group, False):
                 if player.alive():
@@ -453,9 +459,7 @@ class Item(pg.sprite.Sprite):
         if pg.sprite.collide_rect(self,player):
             items[self.name][0] += items[self.name][1]
             self.kill()
-        if pokoj.changing:
-            pokoj.changing = False
-            self.kill()
+
 
 
 

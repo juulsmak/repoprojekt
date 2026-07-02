@@ -49,7 +49,7 @@ class Map():
             self.maprooms[ind] = room
 
         self.startingroom = self.maprooms[self.mapvar.index(self.position)]
-
+        self.current_ind = self.mapvar.index(self.position)
 
 
 class Door():
