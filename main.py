@@ -211,12 +211,7 @@ class Healthbar():
 class Player(Entity):
     def __init__(self, x, y,name, health = 20,speed = 1.75, range = 150,shotspeed = 3, slimespeed = 20, dmg = 1):
         Entity.__init__(self, x, y, name, speed, dmg, health)
-        self.rect = self.image.get_rect()
 
-        self.rect.x = x
-        self.rect.y = y
-        self.speed = speed
-        self.health = health
         self.max_health = health
 
         self.width = self.image.get_width()
@@ -304,9 +299,9 @@ class Player(Entity):
 
 
 class Enemy(Entity):
-    def __init__(self, x, y, name, speed = 1, dmg= 1, health = 100):
+    def __init__(self, x, y, name, speed = 1, dmg= 1, health = 100, flying = False):
         Entity.__init__(self, x, y,name, speed , dmg, health)
-
+        self.flying = flying
 
     def update(self):
         dx = 0
@@ -342,23 +337,26 @@ class Enemy(Entity):
 
     #collisions
         #tiles
-        for tile in pokoj.tilelist:
-            #for y
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-                dy = 0
-            #for x
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-                dx= 0
+        if self.flying == False:
+            for tile in pokoj.tilelist:
+                #for y
+                if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                    dy = 0
+                #for x
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                    dx= 0
 
         #player
         if player.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-            self.cooldown = 10
-            dy = -dy
-            player.health -= self.dmg
+            dy = -3*dy
+            if self.cooldown == 0:
+                player.health -= self.dmg
+                self.cooldown = 30
         if player.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-            self.cooldown = 10
-            dx = -dx
-            player.health -= self.dmg
+            dx = -3*dx
+            if self.cooldown == 0:
+                player.health -= self.dmg
+                self.cooldown = 30
 
 
 
@@ -442,8 +440,8 @@ class Item(pg.sprite.Sprite):
 floor = Map()
 
 #buttons
-start_button = Button(300, 400, startbutton_img)
-exit_button = Button(300, 600, exitbutton_img)
+start_button = Button(20, 400, startbutton_img)
+exit_button = Button(520, 400, exitbutton_img)
 
 #grupa pocisków
 bulletP_group = pg.sprite.Group()
