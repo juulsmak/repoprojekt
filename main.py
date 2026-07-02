@@ -104,8 +104,10 @@ class Pokoj():
         self.tilelist = []
         self.defeated = False
         self.doors = []
+        self.enemyindex = 1
 
     def change(self,dane):
+        self.defeated = False
         self.doors = []
         self.tilelist = []
         rows = 0
@@ -124,13 +126,14 @@ class Pokoj():
                     en = random.choice(enemies)
                     en.rect.x = cols * tilesz
                     en.rect.y = rows * tilesz
-                    en.add(enemy_group)
+                    enemy_group.add(en)
 
                 if tile == 4:
                     item = random.choice(list(items.keys()))
-                    item.rect.x = cols * tilesz
-                    item.rect.y = rows * tilesz
-                    item.add(item_group)
+                    itemx = cols * tilesz
+                    itemy = rows * tilesz
+                    itemm = Item (itemx, itemy, item)
+                    items_group.add(itemm)
 
                 if tile == 5:
                     en = random.choice(bosses)
@@ -152,8 +155,12 @@ class Pokoj():
     def draw(self):
         for tile in self.tilelist:
             screen.blit(kamienob, tile[1])
-        for door in self.doors:
-            screen.blit(door[1], door[2])
+        if self.defeated == True:
+            for door in self.doors:
+                screen.blit(pg.Surface((tilesz,tilesz)), door[2])
+        else:
+            for door in self.doors:
+                screen.blit(door[1], door[2])
 
     def update(self):
         if not enemy_group:
@@ -312,6 +319,18 @@ class Enemy(Entity):
         if self.health <0:
             self.update_animation()
             self.kill()
+            number = random.randint(1,10)
+            if number > 7:
+                item = random.choice(list(items.keys()))
+                itemx = self.rect.centerx
+                itemy = self.rect.centery
+                itemm = Item(itemx, itemy, item)
+                items_group.add(itemm)
+            if number > 5:
+                itemx = self.rect.centerx
+                itemy = self.rect.centery
+                itemm = Item(itemx, itemy, 'health')
+                items_group.add(itemm)
         if self.cooldown >0:
             self.cooldown -=1
         if self.cooldown == 0:
@@ -428,11 +447,12 @@ class Item(pg.sprite.Sprite):
 
     def update(self):
         if pg.sprite.collide_rect(self,player):
+            items[self.name][0] += items[self.name][1]
             if player.health < player.max_health:
-                items[self.name][0] += items[self.name][1]
                 self.kill()
             else:
                 player.health = player.max_health
+            self.kill()
 
 
 
@@ -453,7 +473,7 @@ boss_group = pg.sprite.Group()
 
 
 
-enemies = [Enemy(0,0,'walker',2,1,1)]
+enemies = [Enemy(0,0,'walker',2,1,1), Enemy(0,0,'walker',2,2,1)]
 bosses = [Enemy(0,0,'walker',2,1,1)]
 pokoj = Pokoj()
 pokoj.change(floor.startingroom)
