@@ -9,8 +9,9 @@ clock = pg.time.Clock()
 fps = 60
 
 start_game = False
+game_over = False
 end_game = False
-
+boss_apeared = False
 
 
 #setup okna
@@ -23,9 +24,11 @@ screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 
 #images
-heart1_img = pg.image.load('img/bullet.png')
-heart2_img = pg.image.load('img/bullet.png')
-health_img = pg.image.load('img/bullet.png')
+heart1_img = pg.image.load('img/fullheart.png')
+heart2_img = pg.image.load('img/emptyheart.png')
+health_img = pg.image.load('img/heart.png')
+range_img = pg.image.load('img/range.png')
+
 items_img = {
     'health': health_img
 }
@@ -48,11 +51,11 @@ class Entity(pg.sprite.Sprite):
         self.update_time = pg.time.get_ticks()
         self.action = 0
 
-        animations = ['normal', 'dead']
+        animations = ['normal']
 
         for an in animations:
             temp_list = []
-            for i in range(3):
+            for i in range(4):
                 img = pg.image.load(f'img/{self.name}/{an}/{i}.png')
                 temp_list.append(img)
             self.animation_list.append(temp_list)
@@ -112,6 +115,13 @@ class Pokoj():
                     item.rect.x = cols * tilesz
                     item.rect.y = rows * tilesz
                     item.add(item_group)
+
+                if tile == 5:
+                    en = random.choice(bosses)
+                    en.rect.x = cols * tilesz
+                    en.rect.y = rows * tilesz
+                    en.add(boss_group)
+                    boss_apeared = True
 
                 if tile == 5 or tile == 6 or tile == 7 or tile ==8:
                     door_rect = door_img.get_rect()
@@ -267,6 +277,11 @@ class Player(Entity):
             self.rect.y += dy
         else:
             self.action = 1
+            game_over = True
+
+        if boss_apeared == True and boss_group == False:
+            end_game = True
+
 
 
         self.update_animation()
@@ -336,8 +351,6 @@ class Enemy(Entity):
 
         self.rect.x += dx
         self.rect.y += dy
-
-
 
 
 class Bullet(pg.sprite.Sprite):
@@ -422,11 +435,12 @@ bulletE_group = pg.sprite.Group()
 player_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 items_group = pg.sprite.Group()
+boss_group = pg.sprite.Group()
 
 
-itemtest = Item(150, 150, 'health')
-itemtest.add(items_group)
+
 enemies = [Enemy(0,0,'walker',2,1,1)]
+bosses = [Enemy(0,0,'walker',2,1,1)]
 pokoj = Pokoj()
 pokoj.change(floor.startingroom)
 player = Player(500, 300, 'player', health = 5)
@@ -448,7 +462,11 @@ while gamerun == True:
 
     if start_game == False:
         pass
-    elif end_game == False:
+    else:
+        if  game_over == True:
+            pass
+        if end_game == True:
+            pass
         screen.fill((100,0,100))
         pokoj.update()
         pokoj.draw()
@@ -460,7 +478,7 @@ while gamerun == True:
         items_group.update()
         items_group.draw(screen)
         healthbar.draw()
-    else:
+
 
 
     pg.display.update()
