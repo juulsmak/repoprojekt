@@ -1,5 +1,6 @@
 import pygame as pg
-from rooms import pokojdane, Map
+from rooms import Map
+from dane import *
 import random
 from button import Button
 
@@ -104,7 +105,7 @@ class Pokoj():
         self.tilelist = []
         self.defeated = False
         self.doors = []
-        self.enemyindex = 1
+        self.changing = False
 
     def change(self,dane):
         self.defeated = False
@@ -135,11 +136,11 @@ class Pokoj():
                     itemm = Item (itemx, itemy, item)
                     items_group.add(itemm)
 
-                if tile == 5:
-                    en = random.choice(bosses)
-                    en.rect.x = cols * tilesz
-                    en.rect.y = rows * tilesz
-                    en.add(boss_group)
+                if tile == 3:
+                    b = random.choice(bosses)
+                    b.rect.x = cols * tilesz
+                    b.rect.y = rows * tilesz
+                    boss_group.add(b)
                     boss_apeared = True
 
                 if tile == 5 or tile == 6 or tile == 7 or tile ==8:
@@ -165,6 +166,7 @@ class Pokoj():
     def update(self):
         if not enemy_group:
             self.defeated = True
+            enemy_group.empty()
 
     def change_room(self, dir):
         if dir == 5:
@@ -234,7 +236,7 @@ class Player(Entity):
     def shoot(self, dir):
         if self.shoot_cooldown == 0:
             self.shoot_cooldown = self.slimespeed
-            bulletP = Bullet(self.rect.centerx, self.rect.centery, dir, self.shotspeed, self.range)
+            bulletP = Bullet(self.rect.centerx, self.rect.centery, dir, self.shotspeed, self.range, self.dmg)
             bulletP.add(bulletP_group)
 
     def alive(self):
@@ -287,6 +289,7 @@ class Player(Entity):
                 if pokoj.defeated:
                     if pg.Rect.colliderect(self.rect, door[2]):
                         fade.fill((0,0,0))
+                        pokoj.changing = True
                         pokoj.change_room(door[0])
                         new_map_index = floor.mapvar.index(floor.position)
                         pokoj.defeated = False
@@ -326,11 +329,12 @@ class Enemy(Entity):
                 itemy = self.rect.centery
                 itemm = Item(itemx, itemy, item)
                 items_group.add(itemm)
-            if number > 5:
-                itemx = self.rect.centerx
-                itemy = self.rect.centery
-                itemm = Item(itemx, itemy, 'health')
-                items_group.add(itemm)
+            else:
+                if number > 5:
+                    itemx = self.rect.centerx
+                    itemy = self.rect.centery
+                    itemm = Item(itemx, itemy, 'health')
+                    items_group.add(itemm)
         if self.cooldown >0:
             self.cooldown -=1
         if self.cooldown == 0:
@@ -448,10 +452,9 @@ class Item(pg.sprite.Sprite):
     def update(self):
         if pg.sprite.collide_rect(self,player):
             items[self.name][0] += items[self.name][1]
-            if player.health < player.max_health:
-                self.kill()
-            else:
-                player.health = player.max_health
+            self.kill()
+        if pokoj.changing:
+            pokoj.changing = False
             self.kill()
 
 
@@ -473,11 +476,19 @@ boss_group = pg.sprite.Group()
 
 
 
-enemies = [Enemy(0,0,'walker',2,1,1), Enemy(0,0,'walker',2,2,1)]
-bosses = [Enemy(0,0,'walker',2,1,1)]
-pokoj = Pokoj()
-pokoj.change(floor.startingroom)
-player = Player(500, 300, 'player', health = 10)
+enemies = [
+    Enemy(0,0,'walker',2,1,50),
+    Enemy(0,0,'walker',1,2,100),
+    Enemy(0,0,'walker',4,1,50),
+    Enemy(0,0,'flyer',2,1,50, flying=True),
+    Enemy(0,0,'flyer',1,2,100, flying = True),
+    Enemy(0,0,'flyer',4,1,25, flying = True)
+           ]
+bosses = [
+    Enemy(0,0,'boss',2,2,150),
+    Enemy(0, 0, 'boss', 3, 2, 125, flying = True)
+]
+player = Player(500, 300, 'player', health = 10, dmg = 20)
 player.add(player_group)
 healthbar = Healthbar()
 
@@ -490,7 +501,8 @@ items = {
     'speed': [player.speed, 1],
     'tears': [player.slimespeed, 2]
 }
-
+pokoj = Pokoj()
+pokoj.change(floor.startingroom)
 
 #game loop
 gamerun = True
@@ -525,6 +537,8 @@ while gamerun == True:
                 bulletP_group.draw(screen)
                 enemy_group.update()
                 enemy_group.draw(screen)
+                boss_group.update()
+                boss_group.draw(screen)
                 items_group.update()
                 items_group.draw(screen)
                 healthbar.draw()

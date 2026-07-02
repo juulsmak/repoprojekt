@@ -1,6 +1,6 @@
 import pygame as pg
 import random
-import numpy as np
+from dane import *
 from copy import deepcopy
 
 
@@ -11,10 +11,11 @@ screen = pg.display.set_mode((screen_size_x,screen_size_y))
 
 class Map():
     def __init__(self):
-        self.roomlist = map1
+        self.roomlist = random.choice(maplist)
         self.mapvar = []
         self.maptypes = []
         self.maprooms = []
+        self.mapdefeat = []
         self.position = 0
         self.startingroom = []
         for i in range(0, 4):
@@ -26,12 +27,12 @@ class Map():
                 elif self.roomlist[i][j] == 2:
                     self.mapvar.append([i, j])
                     self.maptypes.append('start')
-                    self.maprooms.append(deepcopy(random.choice(mapsnormal)))
+                    self.maprooms.append(deepcopy(random.choice(mapsstart)))
                     self.position = [i, j]
-#                elif self.roomlist[i][j] == 3:
-#                    self.mapvar.append([i, j])
-#                    self.maprooms.append(random.choice(mapsboss))
-#                    self.maptypes.append('boss')
+                elif self.roomlist[i][j] == 3:
+                    self.mapvar.append([i, j])
+                    self.maprooms.append(random.choice(mapsboss))
+                    self.maptypes.append('boss')
 
 
         for el in self.mapvar:
@@ -73,32 +74,6 @@ class Door():
         self.room[11][10] = 7
         return self.room
 
-pokojdane = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
-
-
-map1 =np.array( [
-    [0, 0, 1, 0],
-    [0, 1, 2, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0]
-])
-maplist = [map1]
-mapsnormal= [pokojdane]
-mapsstart = []
-mapsboss = []
 
 
 
