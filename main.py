@@ -179,8 +179,8 @@ class Pokoj():
 
 class Healthbar():
     def __init__(self):
-        self.image1 = heart1_img
-        self.image2 = heart2_img
+        self.image1 = heart2_img
+        self.image2 = heart1_img
         self.width = self.image1.get_width()
         self.rect1 = self.image1.get_rect()
         self.rect2 = self.image2.get_rect()
@@ -202,7 +202,7 @@ class Healthbar():
 
     def draw(self):
         for el in self.empty:
-            screen.blit(self.image2, el)
+            screen.blit(self.image1, el)
 
         for i in range(player.health):
             screen.blit(self.image2, self.full[i])
@@ -459,7 +459,7 @@ enemies = [Enemy(0,0,'walker',2,1,1)]
 bosses = [Enemy(0,0,'walker',2,1,1)]
 pokoj = Pokoj()
 pokoj.change(floor.startingroom)
-player = Player(500, 300, 'player', health = 5)
+player = Player(500, 300, 'player', health = 10)
 player.add(player_group)
 healthbar = Healthbar()
 
@@ -482,36 +482,33 @@ while gamerun == True:
         if event.type == pg.QUIT:
             gamerun = False
 
-    if start_game == False and end_game == False and game_over == False:
+    if start_game == False:
         screen.blit(menu_screen, menu_screen.get_rect())
         if start_button.draw(screen):
             start_game =True
         if exit_button.draw(screen):
             gamerun = False
     else:
-        screen.blit(bg, bg.get_rect())
-        pokoj.update()
-        pokoj.draw()
-        player.update()
-        bulletP_group.update()
-        bulletP_group.draw(screen)
-        enemy_group.update()
-        enemy_group.draw(screen)
-        items_group.update()
-        items_group.draw(screen)
-        healthbar.draw()
-
-    if  game_over == True and start_game == True:
-        start_game = False
-        screen.fill(game_over_screen)
-        if exit_button.draw(screen):
-            gamerun = False
-    if end_game == True and start_game == True:
-        start_game = False
-        screen.fill(you_won_screen)
-        if exit_button.draw(screen):
-            gamerun = False
-
-
+        if player.alive() == False:
+            screen.blit(game_over_screen, game_over_screen.get_rect())
+            if exit_button.draw(screen):
+                gamerun = False
+        else:
+            if end_game == True:
+                screen.blit(you_won_screen, you_won_screen.get_rect())
+                if exit_button.draw(screen):
+                    gamerun = False
+            else:
+                screen.blit(bg, bg.get_rect())
+                pokoj.update()
+                pokoj.draw()
+                player.update()
+                bulletP_group.update()
+                bulletP_group.draw(screen)
+                enemy_group.update()
+                enemy_group.draw(screen)
+                items_group.update()
+                items_group.draw(screen)
+                healthbar.draw()
 
     pg.display.update()
